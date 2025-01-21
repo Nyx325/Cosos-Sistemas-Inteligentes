@@ -104,12 +104,8 @@ class Vertex(Node):
         Args:
             *adjacency (Vertex): Uno o más vértices que se agregarán como adyacentes.
         """
-        print(f"Agregando adyacencias a {self}")
         for vertex in adjacencies:
-            print(f"Agregando: {vertex}")
             self.adjacencies.append(vertex)
-
-        print(f"Resultado: {", ".join(str(adj) for adj in self.adjacencies)}")
 
     def get(self, index: int) -> Optional["Vertex"]:
         """
