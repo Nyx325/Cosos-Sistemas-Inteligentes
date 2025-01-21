@@ -82,7 +82,7 @@ class Vertex(Node):
     def __init__(
         self,
         value: Any,
-        adjacencies: list["Vertex"] = [],
+        adjacencies: Optional[list["Vertex"]] = None,
     ) -> None:
         """
         Inicializa un vértice con un valor y opcionalmente con una lista de adyacencias.
@@ -93,7 +93,7 @@ class Vertex(Node):
                 o una lista vacía si no se proporciona.
         """
         super().__init__(value)
-        self.adjacencies = adjacencies
+        self.adjacencies = adjacencies if adjacencies else []
         self.etiqueta = None
         self.visited = False
 
@@ -104,8 +104,12 @@ class Vertex(Node):
         Args:
             *adjacency (Vertex): Uno o más vértices que se agregarán como adyacentes.
         """
+        print(f"Agregando adyacencias a {self}")
         for vertex in adjacencies:
+            print(f"Agregando: {vertex}")
             self.adjacencies.append(vertex)
+
+        print(f"Resultado: {", ".join(str(adj) for adj in self.adjacencies)}")
 
     def get(self, index: int) -> Optional["Vertex"]:
         """

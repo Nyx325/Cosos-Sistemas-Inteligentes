@@ -344,10 +344,8 @@ class Graph:
         """
         print(f"Adyacencias del árbol {self.label}:")
         for vertex in self.vertexs:
-            print(f"{vertex} {vertex.etiqueta} -> {{")
-            for adjacency in vertex.adjacencies:
-                print(f"  {adjacency},")
-            print("}")
+            adjacencies_str = ", ".join(str(adj) for adj in vertex.adjacencies)
+            print(f"{vertex} -> {{{adjacencies_str}}}")
         print()
 
     def reset_visited(self) -> None:
