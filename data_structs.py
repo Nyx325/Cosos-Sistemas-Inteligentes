@@ -342,7 +342,7 @@ class Graph:
         """
         Muestra las adyacencias de los vértices del grafo en la consola.
         """
-        print(f"Adyacencias del árbol {self.label}:")
+        print(f"Adyacencias de {self.label}:")
         for vertex in self.vertexs:
             adjacencies_str = ", ".join(str(adj) for adj in vertex.adjacencies)
             print(f"{vertex} -> {{{adjacencies_str}}}")
@@ -382,9 +382,7 @@ class Graph:
         )
 
         titulo = "Recorrido" if seek is None else f"Búsqueda a {seek}"
-        print(
-            f"{titulo} {search_type.name} por \n{direction.name} árbol {self.label}: {{"
-        )
+        print(f"{titulo} {search_type.name} por \n{direction.name} de {self.label}: {{")
 
         steps = 0
 

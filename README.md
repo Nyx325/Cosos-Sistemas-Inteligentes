@@ -18,3 +18,7 @@ odio los errores en runtime por tipado
     recorrido
 - [ ] Pensar en como hacer el algoritmo con limite de
       nivel en `DFS`
+  - Se podría asumir que cada que agregamos al contenedor
+    estamos bajando un nivel, sólo necesitamos tener un
+    conteo de cuánto bajamos y dejar de agregar al contenedor
+    si llegamos vamos a sobrepasar el nivel límite, creo
