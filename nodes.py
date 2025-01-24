@@ -20,6 +20,7 @@ class Node:
             value (Any): El valor que será almacenado en el nodo.
         """
         self.value = value
+        self.visited = False
 
     def __str__(self) -> str:
         """
@@ -94,8 +95,6 @@ class Vertex(Node):
         """
         super().__init__(value)
         self.adjacencies = adjacencies if adjacencies else []
-        self.etiqueta = None
-        self.visited = False
 
     def append(self, *adjacencies: "Vertex") -> None:
         """
@@ -117,6 +116,71 @@ class Vertex(Node):
         Returns:
             Optional[Vertex]: El vértice en la posición especificada, o None
             si el índice está fuera de rango.
+        """
+        if index < 0 or index >= len(self.adjacencies):
+            return None
+
+        return self.adjacencies[index]
+
+
+class WeightedVertex(Node):
+    """
+    Representa un vértice en un grafo ponderado con aristas con pesos.
+
+    Hereda de la clase Node y extiende su funcionalidad para incluir
+    una lista de adyacencias ponderadas, que representa las conexiones
+    a otros vértices junto con los pesos de las aristas.
+
+    Attributes:
+        value (Any): El valor almacenado en el vértice (heredado de Node).
+        adjacencies (list[tuple[WeightedVertex, float]]): Lista de tuplas que representan
+            vértices adyacentes y sus respectivos pesos.
+        visited (bool): Indicador de si el vértice ha sido visitado (heredado de Node).
+    """
+
+    def __init__(
+        self,
+        value: Any,
+        adjacencies: Optional[list[tuple["WeightedVertex", float]]] = None,
+    ) -> None:
+        """
+        Inicializa un vértice ponderado con un valor y opcionalmente con una lista de adyacencias.
+
+        Args:
+            value (Any): El valor que será almacenado en el vértice.
+            adjacencies (Optional[list[tuple[WeightedVertex, float]]]): Lista de tuplas
+                que representan vértices adyacentes y sus pesos. Si no se proporciona,
+                se inicializa como una lista vacía.
+        """
+        super().__init__(value)
+        self.tag: Optional[tuple["WeightedVertex", float]] = None
+        self.adjacencies = adjacencies if adjacencies else []
+
+    def append(
+        self,
+        *adjacencies: tuple["WeightedVertex", float],
+    ) -> None:
+        """
+        Agrega una o más adyacencias ponderadas a la lista del vértice.
+
+        Args:
+            *adjacencies (tuple[WeightedVertex, float]): Una o más tuplas que contienen:
+                - WeightedVertex: Vértice adyacente
+                - float: Peso de la arista hacia ese vértice
+        """
+        for adjacency in adjacencies:
+            self.adjacencies.append(adjacency)
+
+    def get(self, index: int) -> Optional[tuple["WeightedVertex", float]]:
+        """
+        Obtiene la adyacencia ponderada en la posición especificada.
+
+        Args:
+            index (int): Índice de la adyacencia a recuperar (basado en 0)
+
+        Returns:
+            Optional[tuple[WeightedVertex, float]]: Tupla con vértice y peso en la posición
+            especificada, o None si el índice está fuera de rango
         """
         if index < 0 or index >= len(self.adjacencies):
             return None

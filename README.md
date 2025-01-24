@@ -22,3 +22,13 @@ odio los errores en runtime por tipado
     estamos bajando un nivel, sólo necesitamos tener un
     conteo de cuánto bajamos y dejar de agregar al contenedor
     si llegamos vamos a sobrepasar el nivel límite, creo
+  - Tener una lista de vertices que estoy considerando que
+    hay por cada nivel, una vez no se agreguen más vertices
+    al nivel empiezo a descontar de la lista hasta finalmente
+    sacar de esa lista ese nivel, e ir recorriendo esto
+    recursivamente y mirando el nivel máximo que estoy por
+    ramificación
+  1. Inicia algoritmo. Nivel 0, 0 en pila
+  2. Agrego un nodo a la pila, nivel actual 0,
+  3. Agrego 3 a la pila, nivel actual 1
+  4.

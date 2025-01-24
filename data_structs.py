@@ -167,7 +167,7 @@ class Queue(Container):
         node = self._head
         values = []
         while node is not None:
-            values.append(node.value)
+            values.append(str(node.value))
             node = node.next
 
         return str(values)
@@ -290,8 +290,23 @@ class Stack(Container):
         """
         return self.pop()
 
+    def __str__(self) -> str:
+        """
+        Representa la pila como una cadena con los valores almacenados.
 
-class Graph:
+        Returns:
+            str: Una representación en cadena de los elementos de la cola en orden.
+        """
+        node = self.__head
+        values = []
+        while node is not None:
+            values.append(str(node.value))
+            node = node.next
+
+        return str(values)
+
+
+class Graph(ABC):
     """
     Representa un grafo que contiene vértices y permite explorar sus adyacencias
     utilizando algoritmos de búsqueda (BFS y DFS) y direcciones.
@@ -307,7 +322,6 @@ class Graph:
 
     Attributes:
         label (str): Etiqueta que identifica al grafo.
-        vertexs (list[Vertex]): Lista de vértices que forman el grafo.
     """
 
     class Direction(Enum):
@@ -326,17 +340,14 @@ class Graph:
         BFS = auto()  # Búsqueda en anchura
         DFS = auto()  # Búsqueda en profundidad
 
-    def __init__(self, label: str, vertexs: Optional[list["Vertex"]] = None) -> None:
+    def __init__(self, label: str) -> None:
         """
         Inicializa un grafo con una etiqueta y una lista opcional de vértices.
 
         Args:
             label (str): Etiqueta que identifica al grafo.
-            vertexs (Optional[list[Vertex]]): Lista de vértices que forman el grafo.
-                                             Por defecto, es una lista vacía.
         """
         self.label = label
-        self.vertexs = vertexs if vertexs else []
 
     def show_adjacencies(self) -> None:
         """
@@ -347,6 +358,24 @@ class Graph:
             adjacencies_str = ", ".join(str(adj) for adj in vertex.adjacencies)
             print(f"{vertex} -> {{{adjacencies_str}}}")
         print()
+
+
+class NonWeightedGraph(Graph):
+    def __init__(
+        self,
+        label: str,
+        vertexs: Optional[list[Vertex]] = None,
+    ) -> None:
+        """
+        Inicializa un grafo con una etiqueta y una lista opcional de vértices.
+
+        Args:
+            label (str): Etiqueta que identifica al grafo.
+            vertexs (Optional[list[Vertex]]): Lista de vértices que forman el grafo.
+                                             Por defecto, es una lista vacía.
+        """
+        self.label = label
+        self.vertexs = vertexs if vertexs else []
 
     def reset_visited(self) -> None:
         """
@@ -388,6 +417,7 @@ class Graph:
 
         vertex_to_check.add(start)
         start.visited = True
+        print(f"Container: {vertex_to_check}")
 
         while not vertex_to_check.is_empty():
             curr_v: Optional[Vertex] = vertex_to_check.get()
@@ -413,6 +443,8 @@ class Graph:
                 if not neighbor.visited:
                     vertex_to_check.add(neighbor)
                     neighbor.visited = True
+
+            print(f"Container: {vertex_to_check}")
         print("}")
         self.reset_visited()
 
@@ -420,3 +452,120 @@ class Graph:
             print("NO SE ENCONTRÓ EL VÉRTICE\n")
 
         return None
+
+    def explore2(
+        self,
+        start: "Vertex",
+        search_type: "Graph.Algorithm",
+        max_level: Optional[int] = None,
+        seek: Optional["Vertex"] = None,
+        direction: "Graph.Direction" = Direction.RIGHT,
+    ) -> Optional[int]:
+        """
+        Explora el grafo utilizando un algoritmo de búsqueda especificado y una dirección.
+
+        Args:
+            start (Vertex): Vértice desde donde se inicia la exploración.
+            search_type (Graph.Algorithm): Tipo de algoritmo de búsqueda (BFS o DFS).
+            seek (Optional[Vertex]): Vértice que se desea buscar. Si es None, realiza
+                                      un recorrido completo.
+            direction (Graph.Direction): Dirección en la que se recorrerán los adyacentes
+                                         (LEFT o RIGHT). Por defecto, RIGHT.
+
+        Returns:
+            Optional[int]: Número de pasos para encontrar el vértice buscado, o None si
+                           no se encuentra el vértice.
+        """
+        vertex_to_check = Queue()
+
+        titulo = "Recorrido" if seek is None else f"Búsqueda a {seek}"
+        print(f"{titulo} {search_type.name} por \n{direction.name} de {self.label}: {{")
+
+        steps = 0
+
+        curr_lvl = 0
+        vertex_before_change_lvl = 1
+        vertex_to_check.add(start)
+        start.visited = True
+        print(f"Container: {vertex_to_check}")
+
+        while not vertex_to_check.is_empty():
+            vertex_before_change_lvl -= 1
+            if vertex_before_change_lvl == 0:
+                curr_lvl += 1
+
+            if max_level is not None and curr_lvl > max_level:
+                return
+
+            curr_v: Optional[Vertex] = vertex_to_check.get()
+            print(f"  {curr_v}")
+
+            steps += 1
+
+            assert curr_v is not None
+
+            if seek is not None and seek == curr_v:
+                print("}")
+                print(f"Encontrado en: {steps} saltos\n")
+                self.reset_visited()
+                return steps
+
+            if direction == self.Direction.RIGHT:
+                adjacencies = curr_v.adjacencies
+            else:
+                adjacencies = list(reversed(curr_v.adjacencies))
+
+            assert adjacencies is not None
+            for neighbor in adjacencies:
+                if not neighbor.visited:
+                    vertex_to_check.add(neighbor)
+                    neighbor.visited = True
+
+            print(f"Container: {vertex_to_check}")
+        print("}")
+        self.reset_visited()
+
+        if seek is not None:
+            print("NO SE ENCONTRÓ EL VÉRTICE\n")
+
+        return None
+
+
+class WeightedGraph:
+    class Direction(Enum):
+        """
+        Enumera las direcciones posibles para recorrer los vértices.
+        """
+
+        LEFT = auto()
+        RIGHT = auto()
+
+    class Algorithm(Enum):
+        """
+        Enumera los algoritmos de búsqueda disponibles.
+        """
+
+        BFS = auto()  # Búsqueda en anchura
+        DFS = auto()  # Búsqueda en profundidad
+
+    def __init__(
+        self,
+        label: str,
+        vertexs: Optional[list[WeightedVertex]],
+    ) -> None:
+        self.label = label
+        self.vertexs = vertexs if vertexs else []
+
+    def show_adjacencies(self) -> None:
+        print(f"Adyacencias de {self.label}:")
+        for vertex in self.vertexs:
+            adjacencies_str = ", ".join(str(adj) for adj in vertex.adjacencies)
+            print(f"{vertex} -> {{{adjacencies_str}}}")
+        print()
+
+    def reset_visited(self) -> None:
+        """
+        Reinicia el estado de visitado de todos los vértices del grafo.
+        """
+        for vertex in self.vertexs:
+            vertex.visited = False
