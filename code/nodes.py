@@ -51,12 +51,14 @@ class Vertex(Node, Generic[Adjacency], ABC):
             concreto se define en las subclases
 
     Type Parameters:
-        Adjacency (TypeVar): Tipo genérico que debe ser subtipo de Vertex.
-            Define el tipo de elementos en la lista de adyacencias.
+        Adjacency (TypeVar): Define el tipo de elementos en la lista de adyacencias.
     """
 
     def __init__(
-        self, value: Any, adjacencies: Optional[list[Adjacency]] = None
+        self,
+        value: Any,
+        lvl: Optional[int] = None,
+        adjacencies: Optional[list[Adjacency]] = None,
     ) -> None:
         """
         Inicializa un vértice con valor y adyacencias opcionales.
@@ -68,6 +70,7 @@ class Vertex(Node, Generic[Adjacency], ABC):
         """
         super().__init__(value)
         self.adjacencies: list[Adjacency] = adjacencies if adjacencies else []
+        self.lvl = lvl
 
     @abstractmethod
     def append(self, *adjacencies: Adjacency) -> None:
@@ -183,6 +186,7 @@ class NonWeightedVertex(Vertex["NonWeightedVertex"]):
     def __init__(
         self,
         value: Any,
+        lvl: Optional[int] = None,
         adjacencies: Optional[list["NonWeightedVertex"]] = None,
     ) -> None:
         """
@@ -193,7 +197,7 @@ class NonWeightedVertex(Vertex["NonWeightedVertex"]):
             adjacencies (Optional[list[NonWeightedVertex]]): Lista inicial de
                 vértices adyacentes (por defecto: lista vacía)
         """
-        super().__init__(value, adjacencies)
+        super().__init__(value, lvl, adjacencies)
 
     def append(self, *adjacencies: "NonWeightedVertex") -> None:
         """
@@ -238,6 +242,7 @@ class WeightedVertex(Vertex[tuple["WeightedVertex", float]]):
     def __init__(
         self,
         value: Any,
+        lvl: Optional[int] = None,
         adjacencies: Optional[list[tuple["WeightedVertex", float]]] = None,
     ) -> None:
         """
@@ -248,7 +253,7 @@ class WeightedVertex(Vertex[tuple["WeightedVertex", float]]):
             adjacencies (Optional[list[tuple[WeightedVertex, float]]]): Lista
                 inicial de adyacencias con pesos (por defecto: lista vacía)
         """
-        super().__init__(value, adjacencies)
+        super().__init__(value, lvl, adjacencies)
 
     def append(
         self,
