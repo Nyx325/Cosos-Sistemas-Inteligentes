@@ -8,11 +8,11 @@ if __name__ == "__main__":
     v4: Vertex = WeightedVertex(4)
     v5: Vertex = WeightedVertex(5)
 
-    v1.append((v2, 1), (v3, 1))
-    v2.append((v4, 1))
-    v3.append((v5, 1))
+    v1.append((v2, 1.0), (v3, 1.0))
+    v2.append((v4, 1.0))
+    v3.append((v5, 1.0))
 
-    arbol: Graph = WeightedGraph("Arbol No Ponderado", [v1, v2, v3, v4, v5])
+    arbol: Graph = WeightedGraph("Arbol Ponderado", [v1, v2, v3, v4, v5])
     arbol.show_adjacencies()
     arbol.explore(
         start=v1,
