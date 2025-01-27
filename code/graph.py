@@ -62,6 +62,16 @@ class Graph(Generic[T, Adjacency], ABC):
         print(f"  {vertex}")
         return (False, None)
 
+    def equals(
+        self, vertex: Vertex, vertex2: Optional[Any]
+    ) -> tuple[bool, Optional[Any]]:
+        if vertex2 is None or not isinstance(vertex2, Vertex):
+            raise ValueError("Arg should be a Vertex")
+
+        print(f"  {vertex}")
+
+        return (True, None) if vertex is vertex2 else (False, None)
+
     def explore(
         self,
         start: Vertex[T, Adjacency],
@@ -71,7 +81,7 @@ class Graph(Generic[T, Adjacency], ABC):
         ] = None,
         arg: Optional[Any] = None,
         direction: Direction = Direction.RIGHT,
-    ) -> Optional[int]:
+    ) -> Optional[Any]:
         vertex_to_check: Container[Vertex[T, Adjacency]] = (
             Stack() if algorithm == self.Algorithm.DFS else Queue()
         )
@@ -115,6 +125,21 @@ class Graph(Generic[T, Adjacency], ABC):
 
         self.reset_visited()
         return None
+
+    def search(
+        self,
+        start: Vertex[T, Adjacency],
+        seek: Vertex[T, Adjacency],
+        algorithm: Algorithm = Algorithm.BFS,
+        direction: Direction = Direction.RIGHT,
+    ) -> Optional[Any]:
+        return self.explore(
+            start=start,
+            algorithm=algorithm,
+            direction=direction,
+            action=self.equals,
+            arg=seek,
+        )
 
 
 class NonWeightedGraph(Graph[T, NonWeightedVertex[T]]):
