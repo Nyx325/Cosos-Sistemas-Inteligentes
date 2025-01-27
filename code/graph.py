@@ -67,7 +67,6 @@ class Graph(Generic[T, Adjacency], ABC):
         steps = 0
         vertex_to_check.add(start)
         start.visited = True
-        print(f"Container: {vertex_to_check}")
 
         while not vertex_to_check.is_empty():
             curr_v = vertex_to_check.get()
@@ -94,8 +93,6 @@ class Graph(Generic[T, Adjacency], ABC):
                 if not neighbor.visited:
                     vertex_to_check.add(neighbor)
                     neighbor.visited = True
-
-            print(f"Container: {vertex_to_check}")
 
         print("}")
         self.reset_visited()
