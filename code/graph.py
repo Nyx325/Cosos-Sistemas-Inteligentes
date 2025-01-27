@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from typing import Generic, Optional, TypeVar
+from typing import Any, Callable, Generic, Optional, TypeVar
 
 from containers import Container, Queue, Stack
 from nodes import NonWeightedVertex, Vertex, WeightedVertex
@@ -30,6 +30,10 @@ class Graph(Generic[T, Adjacency], ABC):
         self, label: str, vertexs: Optional[list[Vertex[T, Adjacency]]] = None
     ) -> None:
         self.label = label
+
+        if vertexs and not all(isinstance(v, Vertex) for v in vertexs):
+            raise ValueError("All elements in 'vertexs' must be instances of Vertex.")
+
         self.vertexs: list[Vertex[T, Adjacency]] = vertexs if vertexs else []
 
     @abstractmethod
@@ -50,37 +54,50 @@ class Graph(Generic[T, Adjacency], ABC):
         for vertex in self.vertexs:
             vertex.visited = False
 
+    def print_adjacency(
+        self,
+        vertex: Vertex[T, Adjacency],
+        _: Optional[Any],
+    ) -> tuple[bool, Optional[Any]]:
+        print(f"  {vertex}")
+        return (False, None)
+
     def explore(
         self,
         start: Vertex[T, Adjacency],
-        search_type: Algorithm,
-        seek: Optional[Vertex[T, Adjacency]] = None,
+        algorithm: Algorithm,
+        action: Optional[
+            Callable[[Vertex[T, Adjacency], Optional[Any]], tuple[bool, Optional[Any]]]
+        ] = None,
+        arg: Optional[Any] = None,
         direction: Direction = Direction.RIGHT,
     ) -> Optional[int]:
         vertex_to_check: Container[Vertex[T, Adjacency]] = (
-            Stack() if search_type == self.Algorithm.DFS else Queue()
+            Stack() if algorithm == self.Algorithm.DFS else Queue()
         )
 
-        title = "Recorrido" if seek is None else f"Búsqueda a {seek}"
-        print(f"{title} {search_type.name} por {direction.name} de {self.label}: {{")
+        if action is None:
+            action = self.print_adjacency
 
-        steps = 0
+        assert action is not None
+
+        print(f"Recorrido {algorithm.name} por {direction.name} de {self.label}: {{")
+
         vertex_to_check.add(start)
         start.visited = True
 
         while not vertex_to_check.is_empty():
             curr_v = vertex_to_check.get()
-            print(f"  {curr_v}")
-            steps += 1
 
             if curr_v is None:
                 continue
 
-            if seek is not None and seek == curr_v:
+            should_return, value_return = action(curr_v, arg)
+
+            if should_return:
                 print("}")
-                print(f"Encontrado en {steps} saltos\n")
                 self.reset_visited()
-                return steps
+                return value_return
 
             adjacencies = (
                 curr_v.adjacencies
@@ -95,11 +112,8 @@ class Graph(Generic[T, Adjacency], ABC):
                     neighbor.visited = True
 
         print("}")
+
         self.reset_visited()
-
-        if seek is not None:
-            print("NO SE ENCONTRÓ EL VÉRTICE\n")
-
         return None
 
 

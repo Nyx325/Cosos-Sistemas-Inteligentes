@@ -1,3 +1,5 @@
+from typing import Any, Optional
+
 from graph import Graph, WeightedGraph
 from nodes import Vertex, WeightedVertex
 
@@ -14,30 +16,27 @@ if __name__ == "__main__":
 
     arbol: Graph = WeightedGraph("Arbol Ponderado", [v1, v2, v3, v4, v5])
     arbol.show_adjacencies()
+
+    def equals(vertex: Vertex, vertex2: Optional[Any]) -> tuple[bool, Optional[Any]]:
+        if vertex2 is None or not isinstance(vertex2, Vertex):
+            raise ValueError("Arg should be a Vertex")
+
+        print(f"  {vertex}")
+        if vertex is vertex2:
+            return (True, None)
+        else:
+            return (False, None)
+
     arbol.explore(
         start=v1,
-        search_type=Graph.Algorithm.BFS,
+        algorithm=Graph.Algorithm.BFS,
         direction=Graph.Direction.RIGHT,
-        seek=v5,
     )
 
     arbol.explore(
         start=v1,
-        search_type=Graph.Algorithm.DFS,
+        algorithm=Graph.Algorithm.BFS,
         direction=Graph.Direction.RIGHT,
-        seek=v5,
-    )
-
-    arbol.explore(
-        start=v1,
-        search_type=Graph.Algorithm.BFS,
-        direction=Graph.Direction.LEFT,
-        seek=v5,
-    )
-
-    arbol.explore(
-        start=v1,
-        search_type=Graph.Algorithm.DFS,
-        direction=Graph.Direction.LEFT,
-        seek=v5,
+        action=equals,
+        arg=v3,
     )
