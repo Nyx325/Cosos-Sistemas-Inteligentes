@@ -44,11 +44,15 @@ export abstract class Vertex<T, Adjacency> extends Node<T> {
    * @param lvl Nivel
    * @param adjacencies Lista inicial de adyacencias
    */
-  public constructor(
-    value: T,
-    lvl: number | undefined = undefined,
-    adjacencies: Adjacency[] | undefined = undefined,
-  ) {
+  public constructor({
+    value,
+    lvl = undefined,
+    adjacencies = undefined,
+  }: {
+    value: T;
+    lvl?: number;
+    adjacencies?: Adjacency[];
+  }) {
     super(value);
     this.lvl = lvl;
     this.adjacencies = adjacencies ? adjacencies : [];
@@ -117,12 +121,16 @@ export class NonWeightedVertex<T> extends Vertex<T, NonWeightedVertex<T>> {
    * @param lvl Nivel
    * @param adjacencies Lista inicial de vértices adyacentes
    */
-  public constructor(
-    value: T,
-    lvl: number | undefined = undefined,
-    adjacencies: NonWeightedVertex<T>[] | undefined = undefined,
-  ) {
-    super(value, lvl, adjacencies);
+  public constructor({
+    value,
+    lvl = undefined,
+    adjacencies = undefined,
+  }: {
+    value: T;
+    lvl?: number;
+    adjacencies?: NonWeightedVertex<T>[];
+  }) {
+    super({ value, lvl, adjacencies });
   }
 }
 
@@ -137,11 +145,15 @@ export class WeightedVertex<T> extends Vertex<T, [WeightedVertex<T>, number]> {
    * @param lvl Nivel
    * @param adjacencies Lista inicial de adyacencias ponderadas
    */
-  public constructor(
-    value: T,
-    lvl: number | undefined = undefined,
-    adjacencies: [WeightedVertex<T>, number][] | undefined = undefined,
-  ) {
-    super(value, lvl, adjacencies);
+  public constructor({
+    value,
+    lvl = undefined,
+    adjacencies = undefined,
+  }: {
+    value: T;
+    lvl?: number;
+    adjacencies?: [WeightedVertex<T>, number][];
+  }) {
+    super({ value, lvl, adjacencies });
   }
 }
