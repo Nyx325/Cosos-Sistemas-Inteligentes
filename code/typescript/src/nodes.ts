@@ -28,7 +28,7 @@ export abstract class Node<T> {
  * y uno sin peso
  */
 export abstract class Vertex<T, Adjacency> extends Node<T> {
-  private _lvl: number | undefined;
+  public lvl: number | undefined;
   /**
    * Indica si el vértice ha sido visitado en un recorrido
    */
@@ -50,16 +50,9 @@ export abstract class Vertex<T, Adjacency> extends Node<T> {
     adjacencies: Adjacency[] | undefined = undefined,
   ) {
     super(value);
-    this._lvl = lvl;
+    this.lvl = lvl;
     this.adjacencies = adjacencies ? adjacencies : [];
     this.visited = false;
-  }
-
-  /**
-   * Obtiene el nivel actual del vértice
-   */
-  public get lvl(): number | undefined {
-    return this._lvl;
   }
 
   /**

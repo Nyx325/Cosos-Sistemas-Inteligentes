@@ -1,5 +1,5 @@
-import { WeightedGraph, Algorithm, Direction } from "./graph";
-import { WeightedVertex } from "./nodes";
+import { WeightedGraph, Algorithm, Direction } from "./graph.js";
+import { WeightedVertex } from "./nodes.js";
 
 const v1 = new WeightedVertex(1);
 const v2 = new WeightedVertex(2);

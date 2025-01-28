@@ -1,4 +1,4 @@
-import { DoubleLinkedNode } from "./nodes";
+import { DoubleLinkedNode } from "./nodes.js";
 
 /**
  * Interfaz base para contenedores de elementos

@@ -1,5 +1,5 @@
-import { Container, Queue, Stack } from "./containers";
-import { NonWeightedVertex, Vertex, WeightedVertex } from "./nodes";
+import { Container, Queue, Stack } from "./containers.js";
+import { NonWeightedVertex, Vertex, WeightedVertex } from "./nodes.js";
 
 export enum Direction {
   LEFT = "LEFT",
