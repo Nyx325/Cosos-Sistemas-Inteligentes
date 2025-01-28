@@ -1,0 +1,24 @@
+{
+  "name": "typescript",
+  "version": "1.0.0",
+  "description": "No es que vaya usar typescript para IA pero hay algoritmos que me parece más facil pensar o programar desde 0 con typescript y de ahí pasarlo a python para cosas como funciones anónimas y eso",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npm run build && node --watch dist/index.js",
+    "start": "npm run build && node dist/index.js",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "eslint": "^9.19.0",
+    "globals": "^15.14.0",
+    "typescript-eslint": "^8.22.0"
+  },
+  "dependencies": {
+    "@types/node": "^22.10.10"
+  }
+}
