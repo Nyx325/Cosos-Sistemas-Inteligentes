@@ -1,5 +1,5 @@
 import { Container, Queue, Stack } from "./containers.js";
-import { NonWeightedVertex, Vertex, WeightedVertex } from "./nodes.js";
+import { NonWeightedVertex, Tag, Vertex, WeightedVertex } from "./nodes.js";
 
 export enum Direction {
   LEFT = "LEFT",
@@ -154,6 +154,42 @@ export abstract class Graph<T, Adjacency> {
       action: (v) => this.equals(v, seek),
     });
   }
+
+  public setLvls({
+    root,
+    direction = Direction.RIGHT,
+  }: {
+    root: Vertex<T, Adjacency>;
+    direction?: Direction;
+  }) {
+    const vertexToCheck = new Queue<Vertex<T, Adjacency>>();
+    console.log(`Calculando niveles...`);
+    vertexToCheck.add(root);
+    root.visited = true;
+    root.lvl = 1;
+
+    while (!vertexToCheck.isEmpty) {
+      const currV = vertexToCheck.get();
+      if (!currV || !currV.lvl) throw new Error("Unexpected behavior");
+
+      console.log(`  ${currV.toString()}`);
+      const adjacencies =
+        direction === Direction.RIGHT
+          ? currV.adjacencies
+          : [...currV.adjacencies].reverse();
+
+      for (const adj of adjacencies) {
+        const vertex = this.vertexFromAdjacency(adj);
+        if (!vertex.visited) {
+          vertex.visited = true;
+          vertex.lvl = currV.lvl + 1;
+          vertexToCheck.add(vertex);
+        }
+      }
+    }
+
+    this.resetVisited();
+  }
 }
 
 export class NonWeightedGraph<T> extends Graph<T, NonWeightedVertex<T>> {
@@ -170,6 +206,52 @@ export class WeightedGraph<T> extends Graph<T, [WeightedVertex<T>, number]> {
   ): WeightedVertex<T> {
     const [vertex] = adjacency;
     return vertex;
+  }
+
+  public shortestPath({
+    destiny,
+    direction = Direction.RIGHT,
+  }: {
+    destiny: WeightedVertex<T>;
+    direction?: Direction;
+  }) {
+    const vertexToCheck = new Queue<WeightedVertex<T>>();
+    console.log(`Etiquetando...`);
+    vertexToCheck.add(destiny);
+    destiny.visited = true;
+    destiny.tag = {
+      vertex: undefined,
+      weigth: 0,
+    };
+
+    while (!vertexToCheck.isEmpty) {
+      const currV = vertexToCheck.get();
+      if (!currV || !currV.lvl) throw new Error("Unexpected behavior");
+
+      console.log(`  ${currV.toString()}`);
+      const adjacencies =
+        direction === Direction.RIGHT
+          ? currV.adjacencies
+          : [...currV.adjacencies].reverse();
+
+      for (const adj of adjacencies) {
+        const [vertex, weigth] = adj;
+        const tag = { vertex, weigth };
+
+        if (!vertex.visited) {
+          vertex.visited = true;
+          vertex.tag = tag;
+          vertexToCheck.add(vertex);
+        }
+
+        const prevTag = vertex.tag as Tag<T>;
+        if (vertex.tag !== undefined && tag.weigth < prevTag.weigth) {
+          vertex.tag = tag;
+        }
+      }
+    }
+
+    this.resetVisited();
   }
 
   protected adjStr(adjacency: [WeightedVertex<T>, number]): string {

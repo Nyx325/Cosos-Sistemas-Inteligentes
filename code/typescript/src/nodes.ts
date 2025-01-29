@@ -28,7 +28,7 @@ export abstract class Node<T> {
  * y uno sin peso
  */
 export abstract class Vertex<T, Adjacency> extends Node<T> {
-  public lvl: number | undefined;
+  public lvl?: number;
   /**
    * Indica si el vértice ha sido visitado en un recorrido
    */
@@ -132,6 +132,15 @@ export class NonWeightedVertex<T> extends Vertex<T, NonWeightedVertex<T>> {
   }) {
     super({ value, lvl, adjacencies });
   }
+
+  public toString(): string {
+    return `{ Value: ${this.value} Lvl: ${this.lvl}}`;
+  }
+}
+
+export interface Tag<T> {
+  vertex?: WeightedVertex<T>;
+  weigth: number;
 }
 
 /**
@@ -139,6 +148,11 @@ export class NonWeightedVertex<T> extends Vertex<T, NonWeightedVertex<T>> {
  * @template T Tipo del valor almacenado en el vértice
  */
 export class WeightedVertex<T> extends Vertex<T, [WeightedVertex<T>, number]> {
+  /**
+   * Etiqueta para camino más corto a un
+   * nodo
+   */
+  public tag?: Tag<T>;
   /**
    * Crea una instancia de WeightedVertex
    * @param value Valor del vértice
@@ -155,5 +169,13 @@ export class WeightedVertex<T> extends Vertex<T, [WeightedVertex<T>, number]> {
     adjacencies?: [WeightedVertex<T>, number][];
   }) {
     super({ value, lvl, adjacencies });
+  }
+
+  public toString(): string {
+    const tag = this.tag
+      ? `[ ${this.tag.vertex?.value}, ${this.tag.weigth} ]`
+      : "None";
+
+    return `{ Value: ${this.value} Lvl: ${this.lvl} Tag: ${tag}}`;
   }
 }
