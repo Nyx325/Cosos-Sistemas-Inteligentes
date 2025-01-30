@@ -174,8 +174,8 @@ export class WeightedVertex<T> extends Vertex<T, [WeightedVertex<T>, number]> {
   public toString(): string {
     const tag = this.tag
       ? `[ ${this.tag.vertex?.value}, ${this.tag.weigth} ]`
-      : "None";
+      : "undefined";
 
-    return `{ Value: ${this.value} Lvl: ${this.lvl} Tag: ${tag}}`;
+    return `{ Value: ${this.value} Lvl: ${this.lvl} Tag: ${tag} }`;
   }
 }
