@@ -247,11 +247,8 @@ class Graph(Generic[T, Adjacency], ABC):
 
                 if lvl_limit is not None:
                     assert neighbor.lvl
-                    should_add = (
-                        not neighbor.visited
-                        and lvl_limit is None
-                        or (lvl_limit is not None and neighbor.lvl <= lvl_limit)
-                    )
+                    should_add = not neighbor.visited and neighbor.lvl <= lvl_limit
+
                 else:
                     should_add = not neighbor.visited
 

@@ -19,5 +19,12 @@ if __name__ == "__main__":
         seek=v4,
         set_lvls=True,
         algorithm=Graph.Algorithm.BFS,
-        lvl_limit=5,
+        lvl_limit=2,
+    )
+
+    arbol.search(
+        start=v1,
+        seek=v4,
+        algorithm=Graph.Algorithm.BFS,
+        lvl_limit=3,
     )
