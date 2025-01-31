@@ -93,7 +93,7 @@ class Vertex(Node[T], Generic[T, Adjacency], ABC):
         Returns:
             str: Una representación en cadena del vértice.
         """
-        return super().__str__()
+        return f"{{ value: {self.value} lvl: {self.lvl} }}"
 
 
 class DoubleLinkedNode(Node[T]):

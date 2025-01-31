@@ -142,6 +142,8 @@ class Graph(Generic[T, Adjacency], ABC):
         ] = None,
         arg: Optional[Any] = None,
         direction: Direction = Direction.RIGHT,
+        lvl_limit: Optional[int] = None,
+        set_lvls: bool = False,
     ) -> Optional[Any]:
         """
         La verdad la documentación la hice con ChatGPT pero la intención es proporcionar
@@ -205,6 +207,9 @@ class Graph(Generic[T, Adjacency], ABC):
             - Usa el patrón Strategy para algoritmos (BFS/DFS)
             - 'arg' permite implementar closures/acumuladores en 'action'
         """
+        if set_lvls:
+            self.set_lvls(start)
+
         vertex_to_check: Container[Vertex[T, Adjacency]] = (
             Stack() if algorithm == self.Algorithm.DFS else Queue()
         )
@@ -213,7 +218,8 @@ class Graph(Generic[T, Adjacency], ABC):
             action = self.print_adjacency
         assert action is not None
 
-        print(f"Recorrido {algorithm.name} por {direction.name} de {self.label}: {{")
+        limitTitle = f"con límite {lvl_limit}" if lvl_limit is not None else ""
+        print(f"Recorrido {algorithm.name} por {direction.name} {limitTitle}")
         vertex_to_check.add(start)
         start.visited = True
 
@@ -226,7 +232,7 @@ class Graph(Generic[T, Adjacency], ABC):
             end_explore, value_return = action(curr_v, arg)
 
             if end_explore:
-                print("}")
+                print()
                 self.reset_visited()
                 return value_return
 
@@ -238,12 +244,22 @@ class Graph(Generic[T, Adjacency], ABC):
 
             for adjacency in adjacencies:
                 neighbor = self.vertex_from_adjacency(adjacency)
-                if not neighbor.visited:
+
+                if lvl_limit is not None:
+                    assert neighbor.lvl
+                    should_add = (
+                        not neighbor.visited
+                        and lvl_limit is None
+                        or (lvl_limit is not None and neighbor.lvl <= lvl_limit)
+                    )
+                else:
+                    should_add = not neighbor.visited
+
+                if should_add:
                     vertex_to_check.add(neighbor)
                     neighbor.visited = True
 
-        print("}")
-
+        print()
         self.reset_visited()
         return None
 
@@ -253,6 +269,8 @@ class Graph(Generic[T, Adjacency], ABC):
         seek: Vertex[T, Adjacency],
         algorithm: Algorithm = Algorithm.BFS,
         direction: Direction = Direction.RIGHT,
+        lvl_limit: Optional[int] = None,
+        set_lvls: bool = False,
     ) -> Optional[Any]:
         """
         Busca un vértice en el grafo mediante recorrido.
@@ -272,7 +290,41 @@ class Graph(Generic[T, Adjacency], ABC):
             direction=direction,
             action=self.equals,
             arg=seek,
+            lvl_limit=lvl_limit,
+            set_lvls=set_lvls,
         )
+
+    def set_lvls(
+        self, root: Vertex[T, Adjacency], direction: Direction = Direction.RIGHT
+    ):
+        vertex_to_check = Queue[Vertex[T, Adjacency]]()
+        print("Calculando niveles...")
+        root.visited = True
+        root.lvl = 1
+        vertex_to_check.enqueue(root)
+
+        while not vertex_to_check.is_empty():
+            curr_v = vertex_to_check.get()
+            assert curr_v is not None
+            assert curr_v.lvl is not None
+
+            print(f"  {curr_v}")
+
+            adjacencies = (
+                curr_v.adjacencies
+                if direction == self.Direction.RIGHT
+                else list(reversed(curr_v.adjacencies))
+            )
+
+            for adj in adjacencies:
+                vertex = self.vertex_from_adjacency(adj)
+                if not vertex.visited:
+                    vertex.visited = True
+                    vertex.lvl = curr_v.lvl + 1
+                    vertex_to_check.add(vertex)
+
+        print()
+        self.reset_visited()
 
 
 class NonWeightedGraph(Graph[T, NonWeightedVertex[T]]):
