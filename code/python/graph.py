@@ -152,7 +152,7 @@ class Graph(Generic[T, Adjacency], ABC):
         y devolver un retorno y controlar si se sigue o no ejecutando la función con
         el retorno de la tupla (bool, Any) en el retorno de la acción
 
-        Documentación hecha con deepseek:
+        Documentación hecha con Chat:
         Realiza un recorrido parametrizado del grafo ejecutando lógica personalizada en cada vértice.
 
         Diseño clave:
@@ -176,36 +176,15 @@ class Graph(Generic[T, Adjacency], ABC):
                    - Si detener_recorrido = False, continúa normalmente
             arg: Argumento opcional que se pasa a la función 'action'
             direction: Orden de procesamiento de adyacencias (LEFT=invertido, RIGHT=natural)
+            lvl_limit: Limitar la busqueda a un nivel específico, para esto los vértices deben
+                tener el nivel puesto de forma correcta, si no se estableció ningún nivel la función
+                soltará una excepción durante el recorrido o si se establecen niveles mal puede ocurrir
+                un comportamiento inesperado
+            set_lvls: Ejecutar la función self.set_lvls(start) antes de empezar la exploración
 
         Retorno:
             - Valor retornado por 'action' si detiene el recorrido
             - None si completa todo el recorrido sin interrupciones
-
-        Ejemplos de uso:
-            1. Búsqueda de vértice:
-               action = lambda v, target: (v == target, None)
-
-            2. Recopilar información:
-               def collect_vertices(v, acc):
-                   acc.append(v)
-                   return (False, acc)
-
-            3. Búsqueda con retorno temprano:
-               def find_special(v, _):
-                   if v.is_special:
-                       return (True, v)
-                   return (False, None)
-
-        Comportamiento por defecto:
-            Si no se provee 'action', se usa print_adjacency que:
-            - Imprime cada vértice visitado
-            - Nunca detiene el recorrido (siempre retorna False)
-
-        Notas importantes:
-            - Auto-resetea estados 'visited' al finalizar
-            - La dirección LEFT invierte el orden de procesamiento de adyacencias
-            - Usa el patrón Strategy para algoritmos (BFS/DFS)
-            - 'arg' permite implementar closures/acumuladores en 'action'
         """
         if set_lvls:
             self.set_lvls(start)
@@ -277,6 +256,12 @@ class Graph(Generic[T, Adjacency], ABC):
             seek: Vértice objetivo a encontrar
             algorithm: Algoritmo de búsqueda a utilizar
             direction: Dirección de procesamiento de adyacencias
+            direction: Orden de procesamiento de adyacencias (LEFT=invertido, RIGHT=natural)
+            lvl_limit: Limitar la busqueda a un nivel específico, para esto los vértices deben
+                tener el nivel puesto de forma correcta, si no se estableció ningún nivel la función
+                soltará una excepción durante el recorrido o si se establecen niveles mal puede ocurrir
+                un comportamiento inesperado
+            set_lvls: Ejecutar la función self.set_lvls(start) antes de empezar la exploración
 
         Returns:
             None cuando encuentra el vértice o si no existe
