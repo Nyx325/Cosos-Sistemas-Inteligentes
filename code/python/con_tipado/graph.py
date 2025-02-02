@@ -137,50 +137,33 @@ class Graph(Generic[T, Adjacency], ABC):
         self,
         start: Vertex[T, Adjacency],
         algorithm: Algorithm,
+        direction: Direction = Direction.RIGHT,
+        lvl_limit: Optional[int] = None,
+        set_lvls: bool = False,
+        iterative: bool = False,
         action: Optional[
             Callable[[Vertex[T, Adjacency], Optional[Any]], tuple[bool, Optional[Any]]]
         ] = None,
         arg: Optional[Any] = None,
-        direction: Direction = Direction.RIGHT,
-        lvl_limit: Optional[int] = None,
-        set_lvls: bool = False,
     ) -> Optional[Any]:
         """
-        La verdad la documentación la hice con ChatGPT pero la intención es proporcionar
-        un método que haga los recorridos cambiando algritmo y dirección, además de poder
-        recibir una función anónima que puede recibir el vertice actual y un objeto Any
-        y devolver un retorno y controlar si se sigue o no ejecutando la función con
-        el retorno de la tupla (bool, Any) en el retorno de la acción
-
-        Documentación hecha con Chat:
         Realiza un recorrido parametrizado del grafo ejecutando lógica personalizada en cada vértice.
-
-        Diseño clave:
-        - Implementa un patrón de iteración flexible (Template Method)
-        - Permite inyectar comportamiento personalizado durante el recorrido
-        - Provee control de flujo mediante valores de retorno
-        - Soporta diferentes algoritmos (BFS/DFS) y direcciones de recorrido
-
-        Flujo de control:
-        1. Visita un vértice
-        2. Ejecuta la función 'action' con el vértice actual
-        3. Si 'action' devuelve True -> Detiene el recorrido y retorna valor
-        4. Si devuelve False -> Continúa procesando adyacencias
 
         Parámetros:
             start: Vértice raíz donde inicia el recorrido
             algorithm: Estrategia de recorrido (Algoritmo.BFS o Algoritmo.DFS)
-            action: Función callback con firma:
-                   (vértice_actual, arg) -> (detener_recorrido: bool, valor_retorno: Any)
-                   - Si detener_recorrido = True, se aborta el recorrido y retorna valor_retorno
-                   - Si detener_recorrido = False, continúa normalmente
-            arg: Argumento opcional que se pasa a la función 'action'
             direction: Orden de procesamiento de adyacencias (LEFT=invertido, RIGHT=natural)
             lvl_limit: Limitar la busqueda a un nivel específico, para esto los vértices deben
                 tener el nivel puesto de forma correcta, si no se estableció ningún nivel la función
                 soltará una excepción durante el recorrido o si se establecen niveles mal puede ocurrir
                 un comportamiento inesperado
             set_lvls: Ejecutar la función self.set_lvls(start) antes de empezar la exploración
+            iterative: Recorrer un arbol de forma iterativa (potencial error de ciclado en grafos)
+            action: Función callback con firma:
+                   (vértice_actual, arg) -> (detener_recorrido: bool, valor_retorno: Any)
+                   - Si detener_recorrido = True, se aborta el recorrido y retorna valor_retorno
+                   - Si detener_recorrido = False, continúa normalmente
+            arg: Argumento opcional que se pasa a la función 'action'
 
         Retorno:
             - Valor retornado por 'action' si detiene el recorrido
@@ -188,6 +171,10 @@ class Graph(Generic[T, Adjacency], ABC):
         """
         if set_lvls:
             self.set_lvls(start)
+
+        loop = 1
+        vertex_visited = 0
+        vertex_before_loop = 0
 
         vertex_to_check: Container[Vertex[T, Adjacency]] = (
             Stack() if algorithm == self.Algorithm.DFS else Queue()
@@ -199,8 +186,11 @@ class Graph(Generic[T, Adjacency], ABC):
 
         limitTitle = f"con límite {lvl_limit}" if lvl_limit is not None else ""
         print(f"Recorrido {algorithm.name} por {direction.name} {limitTitle}")
+
         vertex_to_check.add(start)
-        start.visited = True
+        vertex_before_loop += 1
+        if not iterative:
+            start.visited = True
 
         while not vertex_to_check.is_empty():
             curr_v = vertex_to_check.get()
@@ -214,6 +204,19 @@ class Graph(Generic[T, Adjacency], ABC):
                 print()
                 self.reset_visited()
                 return value_return
+
+            vertex_visited += 1
+
+            if iterative and vertex_visited == vertex_before_loop:
+                loop += 1
+                vertex_to_check = (
+                    Stack() if algorithm == self.Algorithm.DFS else Queue()
+                )
+                vertex_to_check.add(start)
+                vertex_before_loop += 1
+                vertex_visited = 0
+                print(f"\nIteración {loop}")
+                continue
 
             adjacencies = (
                 curr_v.adjacencies
@@ -233,13 +236,14 @@ class Graph(Generic[T, Adjacency], ABC):
 
                 if should_add:
                     vertex_to_check.add(neighbor)
-                    neighbor.visited = True
+                    if not iterative:
+                        neighbor.visited = True
 
         print()
         self.reset_visited()
         return None
 
-    def search(
+    def seek(
         self,
         start: Vertex[T, Adjacency],
         seek: Vertex[T, Adjacency],
@@ -247,7 +251,12 @@ class Graph(Generic[T, Adjacency], ABC):
         direction: Direction = Direction.RIGHT,
         lvl_limit: Optional[int] = None,
         set_lvls: bool = False,
-    ) -> Optional[Any]:
+        iterative: bool = False,
+        eval_eq: Callable[
+            [Vertex[T, Adjacency], Vertex[T, Adjacency]], bool
+        ] = lambda v1, v2: v1
+        == v2,
+    ) -> Optional[int]:
         """
         Busca un vértice en el grafo mediante recorrido.
 
@@ -266,14 +275,24 @@ class Graph(Generic[T, Adjacency], ABC):
         Returns:
             None cuando encuentra el vértice o si no existe
         """
+        nodesVisited = [0]
+
+        def action(v: Vertex[T, Adjacency], arg) -> tuple[bool, Any]:
+            arg[0] += 1
+
+            print(f"{v}")
+            return (eval_eq(v, seek), arg[0])
+
+        print(f"Buscando {seek}")
         return self.explore(
             start=start,
             algorithm=algorithm,
             direction=direction,
-            action=self.equals,
-            arg=seek,
+            action=action,
+            arg=nodesVisited,
             lvl_limit=lvl_limit,
             set_lvls=set_lvls,
+            iterative=iterative,
         )
 
     def set_lvls(

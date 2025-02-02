@@ -143,19 +143,23 @@ export abstract class Graph<T, Adjacency> {
    * Explora el grafo utilizando un algoritmo específico (BFS o DFS).
    * @param start - El vértice desde el cual comenzar la exploración.
    * @param algorithm - El algoritmo a utilizar (BFS o DFS) por defecto BFS.
-   * @param arg - Argumento opcional que se pasa a la función de acción por defecto undefined.
    * @param direction - La dirección en la que se recorrerán los vértices adyacentes por defecto RIGHT.
+   * @param calcLvls - Ejecutar la función this.setLvls(start) antes de recorrer el grafo
+   * @param lvlLimit - Recorrer el grafo hasta un nivel específico
+   * @param iterative - Recorrer el arbol de forma iterativa, potencial comportamiento inesperado si se trata de un grafo
    * @param action - La función que se ejecutará durante la exploración por defecto undefined.
-   * @returns El valor de retorno de la función de acción, si la exploración termina.
+   * @param arg - Argumento opcional que se pasa a la función de acción por defecto undefined.
+   * @returns El valor de retorno de la función de acción, undefined si la exploración termina fuera de la acción.
    */
   public explore({
     start,
     algorithm = Algorithm.BFS,
-    arg = undefined,
     direction = Direction.RIGHT,
-    action = undefined,
     lvlLimit = undefined,
     calcLvls = false,
+    iterative = false,
+    action = undefined,
+    arg = undefined,
   }: {
     start: Vertex<T, Adjacency>;
     algorithm?: Algorithm;
@@ -164,25 +168,32 @@ export abstract class Graph<T, Adjacency> {
     arg?: unknown;
     direction?: Direction;
     action?: ExploreAction<T, Adjacency>;
+    iterative?: boolean;
   }): unknown | undefined {
     if (calcLvls) {
       this.setLvls({ root: start });
     }
 
+    let loop = 1;
+    let vertexVisited = 0;
+    let vertexBeforeLoop = 0;
+
     const lvlLimitTitle =
       lvlLimit !== undefined ? `con límite ${lvlLimit}` : "";
-    const title = `Recorriendo grafo con método ${algorithm} con dirección ${direction} ${lvlLimitTitle}`;
+    const title = `Recorriendo ${this.label} con método ${algorithm} con dirección ${direction} ${lvlLimitTitle}`;
 
     console.log(title);
 
-    const vertexToCheck: Container<Vertex<T, Adjacency>> =
+    let vertexToCheck: Container<Vertex<T, Adjacency>> =
       algorithm === Algorithm.DFS ? new Stack() : new Queue();
 
     const executeAction = action || this.printAdjacency;
 
     vertexToCheck.add(start);
-    start.visited = true;
+    if (!iterative) start.visited = true;
+    vertexBeforeLoop += 1;
 
+    if (iterative) console.log(`\nIteración ${loop}`);
     while (!vertexToCheck.isEmpty) {
       const currV = vertexToCheck.get();
       if (!currV) throw new Error("Unexpected null vertex");
@@ -195,6 +206,19 @@ export abstract class Graph<T, Adjacency> {
         return returnValue;
       }
 
+      vertexVisited += 1;
+
+      if (iterative && vertexVisited === vertexBeforeLoop) {
+        loop += 1;
+        vertexToCheck = algorithm === Algorithm.DFS ? new Stack() : new Queue();
+        vertexToCheck.add(start);
+        vertexBeforeLoop += 1;
+        vertexVisited = 0;
+
+        console.log(`\nIteración ${loop}`);
+        continue;
+      }
+
       const adjacencies =
         direction === Direction.RIGHT
           ? currV.adjacencies
@@ -202,16 +226,18 @@ export abstract class Graph<T, Adjacency> {
 
       for (const adjacency of adjacencies) {
         const neighbor = this.vertexFromAdjacency(adjacency as Adjacency);
-        const vertexLvl = neighbor.lvl as number;
+
+        // Obviar revisión de nivel nulo en vértice
+        const nLvl = neighbor.lvl as number;
 
         const shouldAddVertex =
-          !neighbor.visited &&
-          (lvlLimit === undefined ||
-            (lvlLimit !== undefined && vertexLvl <= lvlLimit));
+          lvlLimit === undefined
+            ? !neighbor.visited
+            : !neighbor.visited && nLvl <= lvlLimit;
 
         if (shouldAddVertex) {
           vertexToCheck.add(neighbor);
-          neighbor.visited = true;
+          if (!iterative) neighbor.visited = true;
         }
       }
     }
@@ -225,28 +251,57 @@ export abstract class Graph<T, Adjacency> {
    * Busca un vértice específico en el grafo.
    * @param start - El vértice desde el cual comenzar la búsqueda.
    * @param seek - El vértice que se está buscando.
+   * @param start - El vértice desde el cual comenzar la exploración.
    * @param algorithm - El algoritmo a utilizar (BFS o DFS) por defecto BFS.
    * @param direction - La dirección en la que se recorrerán los vértices adyacentes por defecto RIGHT.
-   * @returns El vértice buscado, si se encuentra.
+   * @param calcLvls - Ejecutar la función this.setLvls(start) antes de recorrer el grafo
+   * @param lvlLimit - Recorrer el grafo hasta un nivel específico
+   * @param iterative - Recorrer el arbol de forma iterativa, potencial comportamiento inesperado si se trata de un grafo
+   * @returns número de nodos visitados antes de encontrarlo, undefined si no se encontró el nodo buscado
    */
-  public search({
+  public seek({
     start,
     seek,
     algorithm = Algorithm.BFS,
     direction = Direction.RIGHT,
+    lvlLimit = undefined,
+    iterative = false,
+    calcLvls = false,
+    eq = (v1, v2) => v1 === v2,
   }: {
     start: Vertex<T, Adjacency>;
     seek: Vertex<T, Adjacency>;
     algorithm?: Algorithm;
     direction?: Direction;
-  }): unknown | undefined {
-    return this.explore({
+    calcLvls?: boolean;
+    lvlLimit?: number;
+    iterative?: boolean;
+    eq?: (v1: Vertex<T, Adjacency>, v2: Vertex<T, Adjacency>) => boolean;
+  }): number | undefined {
+    const nodesVisited = [0];
+    const search = this.explore({
       start,
       algorithm,
-      arg: undefined,
+      arg: nodesVisited,
       direction,
-      action: (v) => this.equals(v, seek),
+      lvlLimit,
+      iterative,
+      calcLvls,
+      action: (vertex, arg) => {
+        const nodesVisited = arg as Array<number>;
+        nodesVisited[0] += 1;
+
+        if (!seek || !(seek instanceof Vertex)) {
+          throw new Error("Argument should be a Vertex");
+        }
+
+        this.printAdjacency(vertex);
+
+        return { endExplore: eq(start, seek), returnValue: nodesVisited[0] };
+      },
     });
+
+    return search as number | undefined;
   }
 
   /**
