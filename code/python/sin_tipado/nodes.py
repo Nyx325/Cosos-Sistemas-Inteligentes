@@ -11,16 +11,19 @@ class Node:
         _prev: Referencia al nodo anterior en la estructura.
     """
 
-    def __init__(self, value, next=None, prev=None) -> None:
+    def __init__(self, value, next=None, prev=None, label=None) -> None:
         self.value = value
         self._next = next
         self._prev = prev
+        self.label = label
 
     def __str__(self) -> str:
         """
         Devuelve una representación en cadena del nodo.
         """
-        return f"({self.value})"
+        return (
+            f"({self.value})" if self.label is None else f"({self.label}:{self.value})"
+        )
 
 
 class Vertex:
@@ -34,11 +37,18 @@ class Vertex:
         adjacencies: Lista de vértices adyacentes.
     """
 
-    def __init__(self, value, lvl=None, adjacencies=None) -> None:
+    def __init__(
+        self,
+        value,
+        lvl=None,
+        adjacencies=None,
+        label=None,
+    ) -> None:
         self.value = value
         self.lvl = lvl
         self.visited = False
         self._adjacencies = adjacencies if adjacencies is not None else []
+        self.label = label
 
     def append(self, *adjacencies) -> None:
         """
@@ -68,4 +78,8 @@ class Vertex:
         """
         Devuelve una representación en cadena del vértice.
         """
-        return f"Vertice: {{ Value: {self.value} lvl: {self.lvl} }}"
+        return (
+            f"{{ Value: {self.value} lvl: {self.lvl} }}"
+            if self.label is None
+            else f"{self.label} {{ Value: {self.value} Lvl: {self.lvl} }}"
+        )

@@ -13,7 +13,7 @@ class Node(Generic[T], ABC):
         value (T): El valor almacenado en el nodo.
     """
 
-    def __init__(self, value: T) -> None:
+    def __init__(self, value: T, label: Optional[str] = None) -> None:
         """
         Inicializa un nodo con un valor dado.
 
@@ -22,6 +22,7 @@ class Node(Generic[T], ABC):
         """
         super().__init__()
         self.value: T = value
+        self.label: Optional[str] = label
 
     def __str__(self) -> str:
         """
@@ -30,7 +31,9 @@ class Node(Generic[T], ABC):
         Returns:
             str: Una representación en cadena del nodo.
         """
-        return f"({self.value})"
+        return (
+            f"({self.value})" if self.label is None else f"({self.label}:{self.value})"
+        )
 
 
 class Vertex(Node[T], Generic[T, Adjacency], ABC):
@@ -48,6 +51,7 @@ class Vertex(Node[T], Generic[T, Adjacency], ABC):
         value: T,
         lvl: Optional[int] = None,
         adjacencies: Optional[list[Adjacency]] = None,
+        label: Optional[str] = None,
     ) -> None:
         """
         Inicializa un vértice con un valor, nivel y lista de adyacencias opcionales.
@@ -57,7 +61,7 @@ class Vertex(Node[T], Generic[T, Adjacency], ABC):
             lvl (Optional[int]): Nivel del vértice (por defecto, None).
             adjacencies (Optional[list[Adjacency]]): Lista inicial de adyacencias (por defecto, lista vacía).
         """
-        super().__init__(value)
+        super().__init__(value, label)
         self.adjacencies: list[Adjacency] = adjacencies if adjacencies else []
         self.lvl: Optional[int] = lvl
         self.visited: bool = False
@@ -93,7 +97,11 @@ class Vertex(Node[T], Generic[T, Adjacency], ABC):
         Returns:
             str: Una representación en cadena del vértice.
         """
-        return f"{{ value: {self.value} lvl: {self.lvl} }}"
+        return (
+            f"{{ value: {self.value} lvl: {self.lvl} }}"
+            if self.label is None
+            else f"{self.label} {{ value: {self.value} lvl: {self.lvl} }}"
+        )
 
 
 class DoubleLinkedNode(Node[T]):
