@@ -50,6 +50,16 @@ class Graph:
             vertex.visited = False
 
     def set_lvls(self, root, direction=Direction.RIGHT):
+        """
+        Establece el atributo de lvl a cada uno de los vértices de un grafo
+        a partir del nodo inicial que se escoja haciendo uso de recorrido
+        en anchura.
+
+        Args:
+            root: El nodo que se considerará como nodo inicial
+            direction: La dirección en la que hará el recorrido en anchura,
+                izquierda o derecha, por defecto derecha
+        """
         vertex_to_check = Queue()
         print("Calculando niveles...")
         root.visited = True
