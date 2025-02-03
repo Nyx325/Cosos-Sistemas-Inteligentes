@@ -1,3 +1,5 @@
+from typing import Any, Optional
+
 from graph import Graph, NonWeightedGraph
 from nodes import NonWeightedVertex
 
@@ -113,77 +115,32 @@ if __name__ == "__main__":
         ],
     )
 
-    resultados = {}
-    eq = lambda v1, v2: bool(v1.value == v2.value)
+    def heuristic(adj, curr_v, seek, _arg):
+        diff = 0
+        for i in range(3):
+            for j in range(3):
+                if adj.value[i][j] != seek.value[i][j]:
+                    diff += 1
+        return diff  # Menor valor = mejor estado
 
-    resultados["Anchura derecha"] = arbol.seek(
+    def action(curr_v, seek, arg) -> tuple[bool, Optional[Any]]:
+        for row in curr_v.value:
+            print(row)
+        print()
+        arg[0] += 1
+        return (curr_v.value == seek.value, arg[0])
+
+    print(f"Buscando:")
+    action(v36, v36, [1])
+
+    steps = [0]
+    steps = arbol.hill_climbing(
         start=v1,
-        seek=seek,
-        algorithm=Graph.Algorithm.BFS,
-        direction=Graph.Direction.RIGHT,
-        eval_eq=eq,
+        seek=v36,
+        heuristic=heuristic,
+        action=action,
+        objective=Graph.Objective.MINIMIZE,
+        arg=steps,
     )
 
-    resultados["Anchura izquierda"] = arbol.seek(
-        start=v1,
-        seek=seek,
-        algorithm=Graph.Algorithm.BFS,
-        direction=Graph.Direction.LEFT,
-        eval_eq=eq,
-    )
-
-    resultados["Profundidad Izquierda"] = arbol.seek(
-        start=v1,
-        seek=seek,
-        algorithm=Graph.Algorithm.DFS,
-        direction=Graph.Direction.LEFT,
-        eval_eq=eq,
-    )
-
-    limite = 3
-    resultados[f"Profundidad con límite {limite}"] = arbol.seek(
-        start=v1,
-        seek=seek,
-        algorithm=Graph.Algorithm.DFS,
-        direction=Graph.Direction.RIGHT,
-        set_lvls=True,
-        lvl_limit=limite,
-        eval_eq=eq,
-    )
-
-    resultados["Profundidad Derecha"] = arbol.seek(
-        start=v1,
-        seek=seek,
-        algorithm=Graph.Algorithm.DFS,
-        direction=Graph.Direction.RIGHT,
-        eval_eq=eq,
-    )
-
-    resultados["Profundidad Iterativo Derecha"] = arbol.seek(
-        start=v1,
-        seek=seek,
-        algorithm=Graph.Algorithm.DFS,
-        direction=Graph.Direction.RIGHT,
-        iterative=True,
-        eval_eq=eq,
-    )
-
-    print()
-    for clave, valor in resultados.items():
-        if valor is not None:
-            print(
-                f"Para el método {clave} se recorrieron {valor} nodo(s) antes de encontrar el nodo\n"
-            )
-        else:
-            print(f"Para el método {clave} no se encontró el nodo buscado\n")
-
-    resultados_validos = {k: v for k, v in resultados.items() if v is not None}
-    if len(resultados_validos) == 0:
-        exit()
-
-    min_nodos = min(resultados_validos.values())
-
-    algoritmos_optimos = [k for k, v in resultados_validos.items() if v == min_nodos]
-
-    print(f"El número mínimo de nodos recorridos fue: {min_nodos}")
-    print(f"Los algoritmos que lo lograron son: {', '.join(algoritmos_optimos)}")
+    print(f"Vertices recorridos: {steps}")

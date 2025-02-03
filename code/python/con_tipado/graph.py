@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto
+from random import randint
 from typing import Any, Callable, Generic, Optional, TypeVar
 
 from containers import Container, Queue, Stack
@@ -36,6 +37,10 @@ class Graph(Generic[T, Adjacency], ABC):
 
         BFS = auto()  # Breadth-First Search
         DFS = auto()  # Depth-First Search
+
+    class Objective(Enum):
+        MINIMIZE = auto()
+        MAXIMIZE = auto()
 
     def __init__(
         self, label: str, vertexs: Optional[list[Vertex[T, Adjacency]]] = None
@@ -326,6 +331,70 @@ class Graph(Generic[T, Adjacency], ABC):
 
         print()
         self.reset_visited()
+
+    def hill_climbing(
+        self,
+        start: Vertex[T, Adjacency],
+        seek: Vertex[T, Adjacency],
+        action: Callable[
+            [
+                Vertex[T, Adjacency],  # curr_v
+                Vertex[T, Adjacency],  # seek
+                Any,  # arg
+            ],
+            tuple[bool, Optional[Any]],  # (end_explore, return)
+        ],
+        heuristic: Callable[
+            [
+                Vertex[T, Adjacency],  # adjacency
+                Vertex[T, Adjacency],  # curr_v
+                Vertex[T, Adjacency],  # seek
+                Any,  # arg
+            ],
+            float,
+        ],
+        objective: Objective = Objective.MINIMIZE,
+        arg: Optional[Any] = None,
+    ):
+        print("Recorrido Hill Climbing")
+        reverse = False if objective == self.Objective.MINIMIZE else True
+        agenda: list[Vertex[T, Adjacency]] = []
+        agenda.append(start)
+        while not len(agenda) == 0:
+            curr_v = agenda.pop()
+            assert curr_v is not None
+
+            end_explore, returnValue = action(curr_v, seek, arg)
+
+            if end_explore:
+                return returnValue
+
+            for adjacency in curr_v.adjacencies:
+                vertex = self.vertex_from_adjacency(adjacency)
+                agenda.append(vertex)
+
+            if len(agenda) != 0:
+                # Ordenar la agenda usando la heurística
+                agenda.sort(
+                    key=lambda v: heuristic(v, curr_v, seek, arg), reverse=reverse
+                )
+
+                # Obtener el valor mínimo de la heurística
+                choosen_heuristic = heuristic(agenda[0], curr_v, seek, arg)
+
+                # Filtrar las soluciones con la heurística mínima
+                min_solutions = [
+                    v
+                    for v in agenda
+                    if heuristic(v, curr_v, seek, arg) == choosen_heuristic
+                ]
+
+                # Elegir una solución
+                choosen_index = randint(0, len(min_solutions) - 1)
+                choosen_opt = min_solutions[choosen_index]
+                agenda = [choosen_opt]
+            else:
+                agenda = [start]
 
 
 class NonWeightedGraph(Graph[T, NonWeightedVertex[T]]):
