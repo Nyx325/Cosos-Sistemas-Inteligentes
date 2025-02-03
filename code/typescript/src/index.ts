@@ -1,4 +1,4 @@
-import { Algorithm, Direction, NonWeightedGraph } from "./graph.js";
+import { NonWeightedGraph } from "./graph.js";
 import { NonWeightedVertex } from "./nodes.js";
 
 const v1 = new NonWeightedVertex({ value: 1 });
@@ -37,12 +37,10 @@ const arbol = new NonWeightedGraph("Árbol", [
   v12,
 ]);
 
-arbol.seek({
+arbol.hillClimbing({
   start: v1,
-  seek: v12,
-  algorithm: Algorithm.BFS,
-  direction: Direction.RIGHT,
-  iterative: true,
-  calcLvls: true,
-  lvlLimit: 2,
+  seek: v9,
+  heuristic: (adj) => {
+    return adj.value;
+  },
 });

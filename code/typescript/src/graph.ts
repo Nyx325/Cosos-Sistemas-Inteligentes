@@ -61,6 +61,10 @@ export abstract class Graph<T, Adjacency> {
     this.vertexs = vertexs ? vertexs : [];
   }
 
+  protected getRandomIntInRange(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
   /**
    * Método abstracto que debe ser implementado por las clases derivadas para obtener un vértice a partir de una adyacencia.
    * @param adjacency - La adyacencia de la cual se obtendrá el vértice.
@@ -344,6 +348,80 @@ export abstract class Graph<T, Adjacency> {
 
     console.log();
     this.resetVisited();
+  }
+
+  public hillClimbing({
+    start,
+    seek,
+    arg,
+    heuristic,
+    action = (vertex, seek) => {
+      console.log(vertex.toString());
+      return { endExplore: vertex == seek };
+    },
+  }: {
+    start: Vertex<T, Adjacency>;
+    seek: Vertex<T, Adjacency>;
+    arg?: { [key: string]: unknown };
+    action?: (
+      currV: Vertex<T, Adjacency>,
+      seek: Vertex<T, Adjacency>,
+      arg?: { [key: string]: unknown },
+    ) => { endExplore: boolean; returnValue?: unknown };
+    heuristic: (
+      adj: Vertex<T, Adjacency>,
+      currV: Vertex<T, Adjacency>,
+      seek: Vertex<T, Adjacency>,
+      arg?: { [key: string]: unknown },
+    ) => number;
+  }) {
+    let agenda: Array<Vertex<T, Adjacency>> = [];
+    agenda.push(start);
+
+    while (agenda.length != 0) {
+      const currV = agenda.pop();
+
+      if (currV == undefined) {
+        throw new Error("fisrtElement should not be undefined");
+      }
+
+      const { endExplore, returnValue } = action(currV, seek, arg);
+
+      if (endExplore) {
+        return returnValue;
+      }
+
+      for (const adjacency of currV.adjacencies) {
+        const adj = this.vertexFromAdjacency(adjacency);
+        agenda.push(adj);
+      }
+
+      if (agenda.length != 0) {
+        // Ordenamos la agenda usando la heurística
+        agenda.sort(
+          (a, b) =>
+            heuristic(a, currV, seek, arg) - heuristic(b, currV, seek, arg),
+        );
+
+        // Obtenemos el valor mínimo de la heurística
+        const minHeuristic = heuristic(agenda[0], currV, seek, arg);
+
+        // Filtramos los nodos que tienen la heurística mínima
+        const minSolutions = agenda.filter(
+          (v) => heuristic(v, currV, seek, arg) === minHeuristic,
+        );
+
+        const choosenIndex = this.getRandomIntInRange(
+          0,
+          minSolutions.length - 1,
+        );
+
+        const choosenOpt = minSolutions[choosenIndex];
+        agenda = [choosenOpt];
+      } else {
+        agenda = [start];
+      }
+    }
   }
 }
 
