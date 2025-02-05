@@ -1,3 +1,4 @@
+from time import sleep
 from typing import Any, Optional
 
 from graph import Graph, NonWeightedGraph
@@ -124,10 +125,13 @@ if __name__ == "__main__":
         return diff  # Menor valor = mejor estado
 
     def action(curr_v, seek, arg) -> tuple[bool, Optional[Any]]:
+        arg[0] += 1
+        print(f"Movimiento {arg[0]}")
         for row in curr_v.value:
             print(row)
         print()
-        arg[0] += 1
+
+        sleep(1)
         return (curr_v.value == seek.value, arg[0])
 
     print(f"Buscando:")

@@ -394,7 +394,7 @@ class Graph(Generic[T, Adjacency], ABC):
                 choosen_opt = min_solutions[choosen_index]
                 agenda = [choosen_opt]
             else:
-                agenda = [start]
+                print("No se llegó a la solución")
 
 
 class NonWeightedGraph(Graph[T, NonWeightedVertex[T]]):
