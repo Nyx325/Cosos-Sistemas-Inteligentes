@@ -476,7 +476,7 @@ class Graph(Generic[T, Adjacency], ABC):
                 # Elegir una solución
                 choosen_index = randint(0, len(min_solutions) - 1)
                 choosen_opt = min_solutions[choosen_index]
-                agenda = [choosen_opt]
+                agenda.append(choosen_opt)
 
 
 class NonWeightedGraph(Graph[T, NonWeightedVertex[T]]):
