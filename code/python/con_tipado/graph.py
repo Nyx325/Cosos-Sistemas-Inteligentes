@@ -394,7 +394,89 @@ class Graph(Generic[T, Adjacency], ABC):
                 choosen_opt = min_solutions[choosen_index]
                 agenda = [choosen_opt]
             else:
-                print("No se llegó a la solución")
+                return None
+
+    def a_star(
+        self,
+        start: Vertex[T, Adjacency],
+        seek: Vertex[T, Adjacency],
+        action: Callable[
+            [
+                Vertex[T, Adjacency],  # curr_v
+                Vertex[T, Adjacency],  # seek
+                Any,  # arg
+            ],
+            tuple[bool, Optional[Any]],  # (end_explore, return)
+        ],
+        heuristic: Callable[
+            [
+                Vertex[T, Adjacency],  # adjacency
+                Vertex[T, Adjacency],  # curr_v
+                Vertex[T, Adjacency],  # seek
+                Any,  # arg
+            ],
+            float,
+        ],
+        g: Callable[
+            [
+                Vertex[T, Adjacency],  # adjacency
+                Vertex[T, Adjacency],  # curr_v
+                Vertex[T, Adjacency],  # seek
+                Any,  # arg
+            ],
+            float,
+        ],
+        objective: Objective = Objective.MINIMIZE,
+        arg: Optional[Any] = None,
+    ):
+        print("Recorrido A*")
+        reverse = False if objective == self.Objective.MINIMIZE else True
+
+        agenda: list[Vertex[T, Adjacency]] = []
+
+        agenda.append(start)
+
+        def f(
+            adjacency: Vertex[T, Adjacency],  # adjacency
+            curr_v: Vertex[T, Adjacency],  # curr_v
+            seek: Vertex[T, Adjacency],  # seek
+            arg: Any,  # arg
+        ) -> float:
+            return g(adjacency, curr_v, seek, arg) + heuristic(
+                adjacency, curr_v, seek, arg
+            )
+
+        while len(agenda) != 0:
+            curr_v = agenda.pop()
+
+            end_explore, return_value = action(curr_v, seek, arg)
+
+            if end_explore:
+                return return_value
+
+            for adjacency in curr_v.adjacencies:
+                vertex = self.vertex_from_adjacency(adjacency)
+                agenda.append(vertex)
+
+            if len(agenda) != 0:
+                # Ordenar la agenda usando la heurística
+                agenda.sort(
+                    key=lambda v: f(v, curr_v, seek, arg),
+                    reverse=reverse,
+                )
+
+                # Obtener el valor mínimo de la heurística
+                choosen_heuristic = f(agenda[0], curr_v, seek, arg)
+
+                # Filtrar las soluciones con la heurística mínima
+                min_solutions = [
+                    v for v in agenda if f(v, curr_v, seek, arg) == choosen_heuristic
+                ]
+
+                # Elegir una solución
+                choosen_index = randint(0, len(min_solutions) - 1)
+                choosen_opt = min_solutions[choosen_index]
+                agenda = [choosen_opt]
 
 
 class NonWeightedGraph(Graph[T, NonWeightedVertex[T]]):
