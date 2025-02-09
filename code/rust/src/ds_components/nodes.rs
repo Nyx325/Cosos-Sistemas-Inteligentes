@@ -172,19 +172,3 @@ impl<T, V> NodeBuilder<T, V> {
         }
     }
 }
-
-/// Ejemplo básico de uso
-///
-/// # Nota
-/// Esta implementación no mantiene automáticamente la consistencia
-/// bidireccional de los enlaces entre nodos.
-pub fn example_usage() {
-    // Crear nodo base
-    let node = NodeBuilder::new().value(1).build();
-
-    // Crear segundo nodo enlazado al primero
-    let node2 = NodeBuilder::new().value(2).next(node).build();
-
-    // Crear tercer nodo con referencia al segundo
-    let _node3 = NodeBuilder::new().value(3).prev(Rc::downgrade(&node2));
-}
