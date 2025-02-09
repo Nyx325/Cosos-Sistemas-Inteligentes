@@ -1,16 +1,20 @@
 //! Módulo para implementar una pila (LIFO) con iteradores seguros usando Rc y RefCell
 
-use crate::ds_components::nodes::{Node, NodeBuilder};
-use std::{cell::RefCell, fmt::Display, rc::Rc};
+use crate::ds_components::nodes::Node;
+use std::{
+    cell::RefCell,
+    fmt::Display,
+    rc::{Rc, Weak},
+};
 
 /// Trait que define las operaciones básicas de un contenedor de elementos
 ///
 /// # Type Parameters
 /// - `T`: Tipo de elementos almacenados, debe implementar Clone
-pub trait Container<T: Clone>: IntoIterator {
-    /// Tipo del iterador asociado al contenedor
-    type Iter: Iterator<Item = T>;
-
+pub trait Container<T>: Display
+where
+    T: Clone,
+{
     /// Devuelve el número de elementos en el contenedor
     fn size(&self) -> usize;
 
@@ -25,9 +29,6 @@ pub trait Container<T: Clone>: IntoIterator {
 
     /// Observa el próximo elemento a salir sin removerlo
     fn peek(&self) -> Option<T>;
-
-    /// Devuelve un iterador Iterator<Item = T>
-    fn iter(&self) -> Self::Iter;
 }
 
 /// Iterador para contenedores basados en nodos enlazados
@@ -40,7 +41,10 @@ pub struct ContainerIter<T> {
     current: Option<Rc<RefCell<Node<T>>>>,
 }
 
-impl<T: Clone> Iterator for ContainerIter<T> {
+impl<T> Iterator for ContainerIter<T>
+where
+    T: Clone,
+{
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -67,7 +71,10 @@ pub struct Stack<T> {
     head: Option<Rc<RefCell<Node<T>>>>,
 }
 
-impl<T: Clone> Stack<T> {
+impl<T> Stack<T>
+where
+    T: Clone,
+{
     /// Crea una nueva pila vacía
     ///
     /// # Ejemplo
@@ -92,14 +99,13 @@ impl<T: Clone> Stack<T> {
     /// stack.push(42);
     /// ```
     pub fn push(&mut self, value: T) {
-        let new = NodeBuilder::new().value(value);
+        let new = Node::new(value);
 
-        let new = match &self.head {
-            None => new,
-            Some(node) => new.next(node.clone()),
-        };
+        if let Some(node) = &self.head {
+            new.borrow_mut().next = Some(Rc::clone(node));
+        }
 
-        self.head = Some(new.build());
+        self.head = Some(new);
         self.size += 1;
     }
 
@@ -126,9 +132,10 @@ impl<T: Clone> Stack<T> {
     }
 }
 
-impl<T: Clone> Container<T> for Stack<T> {
-    type Iter = ContainerIter<T>;
-
+impl<T> Container<T> for Stack<T>
+where
+    T: Clone + Display,
+{
     fn add(&mut self, value: T) {
         self.push(value);
     }
@@ -148,12 +155,6 @@ impl<T: Clone> Container<T> for Stack<T> {
     fn is_empty(&self) -> bool {
         self.size == 0
     }
-
-    fn iter(&self) -> Self::IntoIter {
-        ContainerIter {
-            current: self.head.as_ref().map(Rc::clone),
-        }
-    }
 }
 
 /// Implementación de IntoIterator para conversión a iterador
@@ -161,7 +162,10 @@ impl<T: Clone> Container<T> for Stack<T> {
 /// # Comportamiento
 /// - Consume la pila (move semantics)
 /// - Mantiene los elementos originales a través de Rc
-impl<T: Clone> IntoIterator for Stack<T> {
+impl<T> IntoIterator for Stack<T>
+where
+    T: Clone,
+{
     type Item = T;
     type IntoIter = ContainerIter<T>;
 
@@ -172,7 +176,10 @@ impl<T: Clone> IntoIterator for Stack<T> {
     }
 }
 
-impl<T: Display + Clone> Display for Stack<T> {
+impl<T> Display for Stack<T>
+where
+    T: Display + Clone,
+{
     /// Implementa la representación en cadena de la pila
     ///
     /// # Formato
@@ -192,11 +199,119 @@ impl<T: Display + Clone> Display for Stack<T> {
         let mut elements = Vec::new();
 
         // Recorre la pila usando el iterador no consumidor
-        for item in self.iter() {
+        for item in self.clone() {
             elements.push(format!("{}", item));
         }
 
         // Formatea los elementos como una lista separada por comas
+        write!(f, "[{}]", elements.join(", "))
+    }
+}
+
+#[derive(Default, Debug, Clone)]
+pub struct Queue<T>
+where
+    T: Clone,
+{
+    size: usize,
+    head: Option<Rc<RefCell<Node<T>>>>,
+    tail: Option<Weak<RefCell<Node<T>>>>,
+}
+
+impl<T> Queue<T>
+where
+    T: Clone,
+{
+    pub fn new() -> Queue<T> {
+        Queue {
+            size: 0,
+            head: None,
+            tail: None,
+        }
+    }
+
+    pub fn enqueue(&mut self, value: T) {
+        let new_node = Node::new(value);
+
+        match self.tail.take() {
+            None => self.head = Some(Rc::clone(&new_node)),
+            Some(old_tail_weak) => {
+                if let Some(old_tail_rc) = old_tail_weak.upgrade() {
+                    old_tail_rc.borrow_mut().next = Some(Rc::clone(&new_node));
+                }
+            }
+        }
+
+        self.tail = Some(Rc::downgrade(&new_node));
+        self.size += 1;
+    }
+
+    pub fn dequeue(&mut self) -> Option<T> {
+        let head = self.head.take()?;
+        let mut head_ref = head.borrow_mut();
+
+        let value = head_ref.value.clone();
+
+        self.head = head_ref.next.take();
+        if self.head.is_none() {
+            self.tail = None;
+        }
+
+        self.size -= 1;
+        Some(value)
+    }
+}
+
+impl<T> Container<T> for Queue<T>
+where
+    T: Clone + Display,
+{
+    fn add(&mut self, value: T) {
+        self.enqueue(value);
+    }
+
+    fn get(&mut self) -> Option<T> {
+        self.dequeue()
+    }
+
+    fn peek(&self) -> Option<T> {
+        self.head.as_ref().map(|node| node.borrow().value.clone())
+    }
+
+    fn size(&self) -> usize {
+        self.size
+    }
+
+    fn is_empty(&self) -> bool {
+        self.size == 0
+    }
+}
+
+impl<T> IntoIterator for Queue<T>
+where
+    T: Clone,
+{
+    type Item = T;
+    type IntoIter = ContainerIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        ContainerIter {
+            current: self.head.as_ref().map(Rc::clone),
+        }
+    }
+}
+
+impl<T> Display for Queue<T>
+where
+    T: Display + Clone,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut elements = Vec::new();
+
+        for item in self.clone() {
+            elements.push(format!("{}", item));
+        }
+
         write!(f, "[{}]", elements.join(", "))
     }
 }

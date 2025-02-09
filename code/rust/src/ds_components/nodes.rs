@@ -30,6 +30,18 @@ pub struct Node<T> {
     pub prev: Option<Weak<RefCell<Node<T>>>>,
 }
 
+impl<T> Node<T> {
+    pub fn new(value: T) -> Rc<RefCell<Node<T>>> {
+        let node = Node {
+            value,
+            next: None,
+            prev: None,
+        };
+
+        Rc::new(RefCell::new(node))
+    }
+}
+
 impl<T: fmt::Display> fmt::Display for Node<T> {
     /// Implementa la representación en cadena del nodo
     ///

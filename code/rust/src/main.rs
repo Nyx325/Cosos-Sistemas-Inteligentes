@@ -1,17 +1,25 @@
-use data_structs::containers::{Container, Stack};
+use data_structs::containers::{Container, Queue, Stack};
 
 pub mod data_structs;
 pub mod ds_components;
 
 fn main() {
-    let mut stack = Stack::new();
-    stack.push(1);
-    stack.push(3);
-    stack.push(5);
+    let mut container: Box<dyn Container<usize>> = Box::new(Queue::new());
 
-    for item in stack.iter() {
-        println!("{item}")
-    }
+    container.add(1);
+    container.add(2);
+    println!("{container}");
+    container.get();
+    container.get();
+    container.get();
+    println!("{container}");
 
-    println!("{stack}")
+    container = Box::new(Stack::new());
+    container.add(1);
+    container.add(2);
+    println!("{container}");
+    container.get();
+    container.get();
+    container.get();
+    println!("{container}");
 }
