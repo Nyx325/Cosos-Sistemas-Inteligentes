@@ -25,6 +25,9 @@ pub trait Container<T: Clone>: IntoIterator {
 
     /// Observa el próximo elemento a salir sin removerlo
     fn peek(&self) -> Option<T>;
+
+    /// Devuelve un iterador Iterator<Item = T>
+    fn iter(&self) -> Self::Iter;
 }
 
 /// Iterador para contenedores basados en nodos enlazados
@@ -145,6 +148,12 @@ impl<T: Clone> Container<T> for Stack<T> {
     fn is_empty(&self) -> bool {
         self.size == 0
     }
+
+    fn iter(&self) -> Self::IntoIter {
+        ContainerIter {
+            current: self.head.as_ref().map(Rc::clone),
+        }
+    }
 }
 
 /// Implementación de IntoIterator para conversión a iterador
@@ -183,7 +192,7 @@ impl<T: Display + Clone> Display for Stack<T> {
         let mut elements = Vec::new();
 
         // Recorre la pila usando el iterador no consumidor
-        for item in self.clone() {
+        for item in self.iter() {
             elements.push(format!("{}", item));
         }
 
