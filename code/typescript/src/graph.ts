@@ -350,7 +350,7 @@ export abstract class Graph<T, Adjacency> {
     this.resetVisited();
   }
 
-  public hillClimbing({
+  public exploreWithHeuristic({
     start,
     seek,
     arg,

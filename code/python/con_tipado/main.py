@@ -1,4 +1,3 @@
-from time import sleep
 from typing import Any, Optional
 
 from graph import Graph, NonWeightedGraph
@@ -131,7 +130,6 @@ if __name__ == "__main__":
             print(row)
         print()
 
-        sleep(1)
         return (curr_v.value == seek.value, arg[0])
 
     print(f"Buscando:")
@@ -148,3 +146,24 @@ if __name__ == "__main__":
     )
 
     print(f"Vertices recorridos: {steps}")
+
+    arbol.explore(
+        start=v1,
+        algorithm=Graph.Algorithm.BFS,
+        direction=Graph.Direction.RIGHT,
+    )
+    arbol.explore(
+        start=v1,
+        algorithm=Graph.Algorithm.DFS,
+        direction=Graph.Direction.RIGHT,
+    )
+    arbol.explore(
+        start=v1,
+        algorithm=Graph.Algorithm.BFS,
+        direction=Graph.Direction.LEFT,
+    )
+    arbol.explore(
+        start=v1,
+        algorithm=Graph.Algorithm.DFS,
+        direction=Graph.Direction.LEFT,
+    )
