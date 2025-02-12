@@ -1,16 +1,19 @@
-use ds_components::vertexs::Vertex;
+use ds_components::vertexs::WVertexBuilder;
 
 pub mod data_structs;
 pub mod ds_components;
 
 fn main() {
-    let vertex = Vertex::new(1);
-    let vertex2 = Vertex::new(2);
+    let v1 = WVertexBuilder::new().value(1).build();
 
-    vertex.borrow_mut().append(&[vertex2.clone()]);
-    vertex2.borrow_mut().append(&[vertex.clone()]);
+    let v2 = WVertexBuilder::new()
+        .value(2)
+        .adjacency(v1.clone(), 1.0)
+        .build();
 
-    for vertex in vertex2.borrow().adjacencies() {
-        println!("Valor: {}", vertex.borrow().value)
-    }
+    let _v3 = WVertexBuilder::new()
+        .value(3)
+        .adjacency(v1.clone(), 2.0)
+        .adjacency(v2.clone(), 1.0)
+        .build();
 }
