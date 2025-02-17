@@ -1,16 +1,22 @@
-use std::{cell::RefCell, marker::PhantomData, rc::Rc};
+use std::{
+    cell::RefCell,
+    fmt::Debug,
+    hash::{Hash, Hasher},
+    marker::PhantomData,
+    rc::Rc,
+};
 
 /// Alias para una instancia de un vértice.
 ///
 /// Se utiliza `Rc<RefCell<...>>` para permitir el uso compartido y la modificación interna
 /// del vértice.
-pub type VertexInstance<T, A> = Rc<RefCell<Vertex<T, A>>>;
+pub type VertexInstance<T, A: Debug> = Rc<RefCell<Vertex<T, A>>>;
 
 /// Define la relación de adyacencia entre vértices.
 ///
 /// Este trait abstrae el concepto de conexión entre vértices, permitiendo implementar
 /// diferentes tipos de adyacencias (por ejemplo, ponderadas y no ponderadas).
-pub trait Adjacency<T>
+pub trait Adjacency<T>: Clone
 where
     T: Clone,
 {
@@ -29,18 +35,19 @@ where
 pub struct Vertex<T, A>
 where
     T: Clone,
-    A: Adjacency<T>,
+    A: Adjacency<T> + Clone,
 {
     /// Valor almacenado en el vértice.
     pub value: T,
     /// Lista de adyacencias (conexiones a otros vértices).
     adjacencies: Vec<A>,
+    pub level: Option<usize>,
 }
 
 impl<T, A> Vertex<T, A>
 where
     T: Clone,
-    A: Adjacency<T>,
+    A: Adjacency<T> + Clone + Clone,
 {
     /// Crea un nuevo vértice con el valor especificado.
     ///
@@ -55,6 +62,7 @@ where
         Rc::new(RefCell::new(Self {
             value,
             adjacencies: Vec::new(),
+            level: None,
         }))
     }
 
@@ -103,14 +111,15 @@ where
     }
 
     /// Devuelve una slice con todas las adyacencias del vértice.
-    pub fn adjacencies(&self) -> &[A] {
-        &self.adjacencies
+    pub fn adjacencies(&self) -> Vec<A> {
+        self.adjacencies.iter().cloned().collect()
     }
 }
 
 /// Representa una adyacencia no ponderada.
 ///
 /// Se utiliza para conectar vértices sin asignarles un peso adicional.
+#[derive(Debug, Clone)]
 pub struct NonWeightedAdjacency<T>
 where
     T: Clone,
@@ -146,6 +155,7 @@ where
 /// Representa una adyacencia ponderada.
 ///
 /// Se utiliza para conectar vértices asignándoles un peso a la conexión.
+#[derive(Debug, Clone)]
 pub struct WeightedAdjacency<T>
 where
     T: Clone,
@@ -204,6 +214,7 @@ where
     value: V,
     /// Lista de adyacencias ponderadas a agregar al vértice.
     adjacencies: Vec<WeightedAdjacency<T>>,
+    level: Option<usize>,
 }
 
 impl<T> WVertexBuilder<T, Value<T>>
@@ -219,6 +230,7 @@ where
         Rc::new(RefCell::new(Vertex {
             value: self.value.0,
             adjacencies: self.adjacencies,
+            level: self.level,
         }))
     }
 }
@@ -246,6 +258,7 @@ where
             value: self.value,
             _p: self._p,
             adjacencies: self.adjacencies,
+            level: self.level,
         };
 
         builder
@@ -270,6 +283,15 @@ where
         self.adjacencies.extend(adjacencies);
         self
     }
+
+    pub fn level(self, level: usize) -> Self {
+        Self {
+            level: Some(level),
+            _p: self._p,
+            adjacencies: self.adjacencies,
+            value: self.value,
+        }
+    }
 }
 
 impl<T> WVertexBuilder<T, NoValue>
@@ -282,6 +304,7 @@ where
             value: NoValue::default(),
             adjacencies: Vec::new(),
             _p: PhantomData::default(),
+            level: None,
         }
     }
 }
@@ -304,6 +327,7 @@ where
             value: Value(value),
             adjacencies: self.adjacencies,
             _p: self._p,
+            level: self.level,
         }
     }
 }
@@ -320,6 +344,7 @@ where
     value: V,
     /// Lista de adyacencias no ponderadas a agregar al vértice.
     adjacencies: Vec<NonWeightedAdjacency<T>>,
+    level: Option<usize>,
 }
 
 impl<T> NWVertexBuilder<T, Value<T>>
@@ -335,6 +360,7 @@ where
         Rc::new(RefCell::new(Vertex {
             value: self.value.0,
             adjacencies: self.adjacencies,
+            level: self.level,
         }))
     }
 }
@@ -360,6 +386,7 @@ where
             value: self.value,
             _p: self._p,
             adjacencies: self.adjacencies,
+            level: self.level,
         };
 
         builder.adjacencies.push(NonWeightedAdjacency::new(vertex));
@@ -382,6 +409,15 @@ where
         self.adjacencies.extend(adjacencies);
         self
     }
+
+    pub fn level(self, level: usize) -> Self {
+        Self {
+            level: Some(level),
+            value: self.value,
+            adjacencies: self.adjacencies,
+            _p: self._p,
+        }
+    }
 }
 
 impl<T> NWVertexBuilder<T, NoValue>
@@ -394,6 +430,7 @@ where
             value: NoValue::default(),
             adjacencies: Vec::new(),
             _p: PhantomData::default(),
+            level: None,
         }
     }
 }
@@ -416,6 +453,57 @@ where
             value: Value(value),
             adjacencies: self.adjacencies,
             _p: self._p,
+            level: self.level,
         }
     }
+}
+
+/// Nuevo tipo contenedor para poder implementar `Hash` y `Eq`.
+#[derive(Debug)]
+pub struct VertexWrapper<T, A>
+where
+    T: Clone,
+    A: Adjacency<T> + Clone,
+{
+    vertex: VertexInstance<T, A>,
+}
+
+impl<T, A> VertexWrapper<T, A>
+where
+    T: Clone,
+    A: Adjacency<T> + Clone,
+{
+    pub fn new(vertex: VertexInstance<T, A>) -> Self {
+        Self { vertex }
+    }
+}
+
+impl<T, A> Hash for VertexWrapper<T, A>
+where
+    T: Clone,
+    A: Adjacency<T> + Clone,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // Hashea la dirección de memoria del `Rc`
+        let ptr = Rc::as_ptr(&self.vertex);
+        ptr.hash(state);
+    }
+}
+
+impl<T, A> PartialEq for VertexWrapper<T, A>
+where
+    T: Clone,
+    A: Adjacency<T> + Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        // Compara las direcciones de memoria de los `Rc`
+        Rc::ptr_eq(&self.vertex, &other.vertex)
+    }
+}
+
+impl<T, A> Eq for VertexWrapper<T, A>
+where
+    T: Clone,
+    A: Adjacency<T> + Clone,
+{
 }

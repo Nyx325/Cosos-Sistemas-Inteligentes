@@ -110,6 +110,23 @@ pub struct Stack<T> {
     head: Option<Rc<RefCell<Node<T>>>>,
 }
 
+impl<T> Display for Stack<T>
+where
+    T: Clone + Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut elements = Vec::new();
+
+        // Recorre el contenedor usando su iterador
+        for item in self.iter() {
+            elements.push(format!("{}", item));
+        }
+
+        // Formatea los elementos como una lista separada por comas
+        write!(f, "[{}]", elements.join(", "))
+    }
+}
+
 impl<T> Stack<T>
 where
     T: Clone,
@@ -235,6 +252,23 @@ pub struct Queue<T: Clone> {
     size: usize,
     head: Option<Rc<RefCell<Node<T>>>>,
     tail: Option<Weak<RefCell<Node<T>>>>,
+}
+
+impl<T> Display for Queue<T>
+where
+    T: Clone + Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut elements = Vec::new();
+
+        // Recorre el contenedor usando su iterador
+        for item in self.iter() {
+            elements.push(format!("{}", item));
+        }
+
+        // Formatea los elementos como una lista separada por comas
+        write!(f, "[{}]", elements.join(", "))
+    }
 }
 
 impl<T: Clone> Queue<T> {
