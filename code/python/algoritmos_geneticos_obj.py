@@ -1,5 +1,4 @@
 from random import randint, random
-from types import NotImplementedType
 
 
 class Pueblerino:
@@ -13,7 +12,9 @@ class Pueblerino:
         return f"{{ Valor: {self.valor} Codificacion: {self.codificacion} Fitness: {self.fitness} }}"
 
 
+# Dentro de una clase, pero no seria tan necesario
 class AlgoritmosGeneticos:
+    # Notacion para no tener que colocar self en el metodo de la clase
     @staticmethod
     def generar_poblacion_binaria_aleatoria(
         num_pueblerinos: int,
@@ -24,7 +25,7 @@ class AlgoritmosGeneticos:
             raise Exception(error)
 
         poblacion: list[Pueblerino] = []
-        for _ in range(num_pueblerinos):
+        for i in range(num_pueblerinos):
             max_num_binario_posible = 2**bits - 1
             codificacion = format(randint(0, max_num_binario_posible), f"0{bits}b")
             valor = int(codificacion, 2)
@@ -134,19 +135,10 @@ class AlgoritmosGeneticos:
 
             # Asumir que está codificado en binario para la decodificacion de la cruza
             valor = int(codificacion_hijo1, 2)
-            codificacion = codificacion_hijo1
-            fitness = calcular_fitness(valor)
-            hijo1 = Pueblerino(valor, codificacion, fitness)
+            hijo1 = Pueblerino(valor, codificacion_hijo1, calcular_fitness(valor))
 
             valor = int(codificacion_hijo2, 2)
-            codificacion = codificacion_hijo2
-            fitness = calcular_fitness(valor)
-
-            hijo2 = Pueblerino(
-                valor=valor,
-                codificacion=codificacion,
-                fitness=fitness,
-            )
+            hijo2 = Pueblerino(valor, codificacion_hijo2, calcular_fitness(valor))
 
             # Agregar los hijos a la nueva población
             nuevaPob.append(hijo1)
@@ -169,13 +161,7 @@ class AlgoritmosGeneticos:
             )
 
             valor = int(codificacion_hijo, 2)
-            codificacion = codificacion_hijo
-            fitness = calcular_fitness(valor)
-            hijo = Pueblerino(
-                valor=valor,
-                codificacion=codificacion,
-                fitness=fitness,
-            )
+            hijo = Pueblerino(valor, codificacion_hijo, calcular_fitness(valor))
             nuevaPob.append(hijo)
 
         return nuevaPob
@@ -209,11 +195,7 @@ class AlgoritmosGeneticos:
             # daba una mutacion, un errorsote
             codificacion = "".join(codificacion_arr)
             valor = int(codificacion, 2)
-            nuevo_pueblerino = Pueblerino(
-                codificacion=codificacion,
-                valor=valor,
-                fitness=calcular_fitness(valor),
-            )
+            nuevo_pueblerino = Pueblerino(valor, codificacion, calcular_fitness(valor))
 
             nueva_poblacion.append(nuevo_pueblerino)
 
@@ -233,27 +215,29 @@ def parar(poblacion: list[Pueblerino]):
 
 
 def print_poblacion(poblacion: list):
-    print("Poblacion generada: ")
     for p in poblacion:
         print(p)
     print("\n")
 
 
-poblacion = AlgoritmosGeneticos.generar_poblacion_binaria_aleatoria(
-    num_pueblerinos=4,
-    bits=5,
-)
+if __name__ == "__main__":
+    poblacion = AlgoritmosGeneticos.generar_poblacion_binaria_aleatoria(
+        num_pueblerinos=10,
+        bits=5,
+    )
 
-generacion = 0
-while parar(poblacion) != True and generacion <= 30:
-    # Seleccionar a los mejores individuos según su fitness,
-    # aplicar elitismo para el primer individuo, y torneo
-    # determinista para el resto de individuos
-    poblacion = AlgoritmosGeneticos.elitismo(poblacion)
-    # Cruza de un solo punto, generación de dos hijos por pareja.
-    poblacion = AlgoritmosGeneticos.cruza(poblacion)
-    poblacion = AlgoritmosGeneticos.muta(poblacion)
-    print(f"Generacion {generacion}")
+    print("Poblacion generada")
     print_poblacion(poblacion)
+    generacion = 0
+    while parar(poblacion) != True and generacion <= 30:
+        # Seleccionar a los mejores individuos según su fitness,
+        # aplicar elitismo para el primer individuo, y torneo
+        # determinista para el resto de individuos
+        poblacion = AlgoritmosGeneticos.elitismo(poblacion)
+        # Cruza de un solo punto, generación de dos hijos por pareja.
+        poblacion = AlgoritmosGeneticos.cruza(poblacion)
+        poblacion = AlgoritmosGeneticos.muta(poblacion)
+        print(f"Generacion {generacion}")
+        print_poblacion(poblacion)
 
-    generacion += 1
+        generacion += 1
