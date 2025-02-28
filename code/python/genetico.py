@@ -38,7 +38,6 @@ def racismo(poblacion: list[dict[str, Any]]):
 def torneo(poblacion: list[dict[str, Any]]):
     pass
 
-
 poblacion_codificada = generar_poblacion(999999, BITS)
 
 fitness_poblacion = [
